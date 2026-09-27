@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>MacroVision - Dietary Analysis Demo</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 640px;
+         margin: 40px auto; color: #1f3864; }
+  h1 { font-size: 22px; }
+  #drop { border: 2px dashed #9dc3e6; border-radius: 10px; padding: 30px; text-align: center; }
+  button { background: #2e5aa8; color: white; border: none; padding: 10px 18px;
+           border-radius: 6px; cursor: pointer; margin-top: 12px; }
+  .item-row { display: flex; justify-content: space-between; padding: 8px 0;
+              border-bottom: 1px solid #eef2f7; }
+  .bar-bg { background: #eef2f7; border-radius: 6px; height: 14px; overflow: hidden; }
+  .bar-fill { height: 100%; background: #2e5aa8; }
+  .surplus { color: #c96b4a; font-weight: bold; }
+  .deficit { color: #b08900; font-weight: bold; }
+  .on-target { color: #4a8a4a; font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>MacroVision - Meal Analysis</h1>
+  <div id="drop">
+    <input type="file" id="fileInput" accept="image/*" />
+    <br/>
+    <button onclick="submitPhoto()">Analyse Meal</button>
+  </div>
+
+  <div id="results" style="margin-top: 24px;"></div>
+
+<script>
+const API_BASE = "http://localhost:8000";
+
+async function submitPhoto() {
+  const fileInput = document.getElementById("fileInput");
+  if (!fileInput.files.length) { alert("Choose a meal photo first."); return; }
+
+  const form = new FormData();
+  form.append("file", fileInput.files[0]);
+
+  const res = await fetch(`${API_BASE}/predict`, { method: "POST", body: form });
+  const data = await res.json();
+  render(data);
+}
+
+function render(data) {
+  const el = document.getElementById("results");
+  const items = data.macros.items.map(i =>
+    `<div class="item-row"><span>${i.label} (${i.mass_g} g)</span>
+     <span>${i.calories} kcal</span></div>`).join("");
+
+  const bars = Object.entries(data.macros.totals).map(([k, v]) => {
+    const target = data.recommendation.per_meal_target[k] || v;
+    const pct = Math.min(100, Math.round((v / target) * 100));
+    const status = data.recommendation.status[k] || "on-target";
+    return `<div style="margin:10px 0;">
+      <div style="display:flex; justify-content:space-between;">
+        <b>${k}</b><span class="${status}">${v} (${status})</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join("");
+
+  el.innerHTML = `
+    <h3>Detected Items</h3>${items}
+    <h3>Macro Breakdown vs. Target</h3>${bars}
+    <h3>Notes</h3>
+    <ul>${data.recommendation.notes.map(n => `<li>${n}</li>`).join("") || "<li>All macros on target.</li>"}</ul>
+  `;
+}
+</script>
+</body>
+</html>

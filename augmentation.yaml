@@ -1,0 +1,8 @@
+# Iteration 2 augmentation config (Section 4.3 of the report).
+# Passed to Ultralytics' training call via the matching CLI/API arguments.
+fliplr: 0.5        # horizontal flip probability
+degrees: 15.0      # +/- rotation in degrees
+hsv_h: 0.015       # hue jitter
+hsv_s: 0.5         # saturation jitter (contrast-like effect)
+hsv_v: 0.3         # value/brightness jitter
+mosaic: 0.0        # disabled -- food items should not be tiled across scenes

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.pt
+runs/
+data/yolo/
+data/reference_plates/*.csv
+data/reference_plates/photos/
+.DS_Store
+*.ipynb_checkpoints
